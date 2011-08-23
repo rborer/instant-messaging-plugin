@@ -33,7 +33,7 @@ THE SOFTWARE.
   <f:optionalBlock name="${descriptor.PARAMETERNAME_CUSTOM_GROUP_MESSAGES}"
   	title="${%Customize group chat messages}" field="customGroupMessages">
     <f:entry title="${%Custom start message}"
-      description="${%Custom group chat start message; used only when notify build start is checked.}">
+      description="${%Custom group chat start message; used only when notify build starts strategy is checked}">
       <f:textbox name="${descriptor.PARAMETERNAME_CUSTOM_START_MESSAGE}" field="customStartMessage"/>
     </f:entry>
     <f:entry title="${%Custom build success message}"

@@ -5,18 +5,20 @@ import hudson.model.BuildListener;
 import hudson.model.Result;
 import hudson.plugins.im.IMPublisher;
 import hudson.plugins.im.tools.BuildHelper;
-import hudson.plugins.im.tools.MessageHelper;
 import org.apache.commons.lang.StringUtils;
+import org.jenkinsci.plugins.tokenmacro.MacroEvaluationException;
+import org.jenkinsci.plugins.tokenmacro.TokenMacro;
 
 import java.io.IOException;
 
 /**
+ * Custom group message {@link BuildToChatNotifier}. Used in case the project defines custom group chat messages.
+ * When no custom message is defined, calls the {}@link #selectedNotifier} to create the message.
+ *
+ *
  * @author reynald
  */
 public class CustomGroupMessageNotifier extends BuildToChatNotifier {
-
-	private static final String BUILD_NUMBER_TOKEN = "${BUILD_NUMBER}";
-	private static final String BUILD_URL_TOKEN = "${BUILD_URL}";
 
 	private final BuildToChatNotifier selectedNotifier;
 
@@ -31,7 +33,7 @@ public class CustomGroupMessageNotifier extends BuildToChatNotifier {
 			message = selectedNotifier.buildStartMessage(publisher, build, listener);
 		}
 
-		return replaceTokensInMessage(message, build);
+		return replaceTokensInMessage(message, build, listener);
 	}
 
 	@Override
@@ -53,14 +55,22 @@ public class CustomGroupMessageNotifier extends BuildToChatNotifier {
 			message = selectedNotifier.buildCompletionMessage(publisher, build, listener);
 		}
 
-		return replaceTokensInMessage(message, build);
+		return replaceTokensInMessage(message, build, listener);
 	}
 
-	private String replaceTokensInMessage(final String message, final AbstractBuild<?, ?> build) {
-		// TODO: maybe consider using the token-macro plugin instead
-		String replacedMessage = message.replaceAll(BUILD_URL_TOKEN, MessageHelper.getBuildURL(build));
-		replacedMessage = replacedMessage.replaceAll(BUILD_NUMBER_TOKEN, String.valueOf(build.getNumber()));
+	private String replaceTokensInMessage(final String message, final AbstractBuild<?, ?> build,
+										  final BuildListener listener) {
 
-		return replacedMessage;
+		listener.getLogger().println("Replacing tokens in message:'" + message + "'");
+
+		try {
+			return TokenMacro.expand(build, listener, message);
+		} catch (MacroEvaluationException mee) {
+			throw new RuntimeException(mee);
+		} catch (IOException ioe) {
+			throw new RuntimeException(ioe);
+		} catch (InterruptedException ie) {
+			throw new RuntimeException(ie);
+		}
 	}
 }
